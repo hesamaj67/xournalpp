@@ -1,5 +1,6 @@
 #include "StrokeHandler.h"
 
+
 #include <algorithm>  // for max, min
 #include <cmath>      // for ceil, pow, abs
 #include <limits>     // for numeric_limits
