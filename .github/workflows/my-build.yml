@@ -14,7 +14,7 @@ jobs:
         uses: ./.github/actions/install_deps_windows
         with:
           msystem: MINGW64
-          msys_package_env: mingw-w64-x86_64
+          msys_package_env: x86_64
 
       - name: Build Xournal++
         uses: ./.github/actions/build
