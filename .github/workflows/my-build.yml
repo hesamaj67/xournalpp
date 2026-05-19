@@ -3,13 +3,33 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
-    uses: ./.github/workflows/make-installer-windows.yml
-    with:
-      runner: "windows-latest"
-      displayed_name: "Windows"
-      msystem: "MINGW64"
-      msys_package_env: "mingw-w64-x86_64"
-      head_sha: ""
-      artifact_version_suffix: ""
-      extra_cmake_flags: ""
+  build-windows:
+    name: Create installer (Windows)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        uses: ./.github/actions/install_deps_windows
+        with:
+          msystem: MINGW64
+          msys_package_env: mingw-w64-x86_64
+
+      - name: Build Xournal++
+        uses: ./.github/actions/build
+        with:
+          build_type: RelWithDebInfo
+          extra_cmake_flags: ""
+          shell: msys2 {0}
+
+      - name: Create installer
+        working-directory: ${{github.workspace}}/build
+        shell: msys2 {0}
+        run: bash -lc "../windows-setup/package.sh"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Windows-installer
+          path: "${{github.workspace}}/build/xournalpp-setup.exe"
