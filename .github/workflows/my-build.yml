@@ -1,16 +1,15 @@
 name: My Build
 on:
   workflow_dispatch:
-    inputs:
-      build_type:
-        description: 'Build type'
-        default: 'RelWithDebInfo'
 
 jobs:
   build:
-    uses: ./.github/workflows/create-installers.yml
+    uses: ./.github/workflows/make-installer-windows.yml
     with:
-      linux_builds: '[{"runner":"ubuntu-22.04","displayed_name":"Ubuntu 22.04"}]'
-      windows_builds: '[{"runner":"windows-latest","displayed_name":"Windows","msystem":"MINGW64","msys_package_env":"mingw-w64-x86_64"}]'
-      macos_builds: ''
-      build_type: ${{ inputs.build_type }}
+      runner: "windows-latest"
+      displayed_name: "Windows"
+      msystem: "MINGW64"
+      msys_package_env: "mingw-w64-x86_64"
+      head_sha: ""
+      artifact_version_suffix: ""
+      extra_cmake_flags: ""
