@@ -19,6 +19,8 @@ jobs:
           build_type: RelWithDebInfo
           extra_cmake_flags: ""
           shell: msys2 {0}
+      - name: Install NSIS
+        run: choco install nsis -y
       - name: Create installer
         working-directory: ${{github.workspace}}/build
         shell: msys2 {0}
