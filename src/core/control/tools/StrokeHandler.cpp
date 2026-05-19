@@ -71,6 +71,22 @@ auto StrokeHandler::onMotionNotifyEvent(const PositionInputData& pos, double zoo
 }
 
 void StrokeHandler::paintTo(Point point) {
+    // --- START: Hardcoded Filter for Defective Stylus ---
+    // این بخش نویزهای سخت‌افزاری قلم شما را قبل از هر پردازشی حذف می‌کند
+    if (this->hasPressure && point.z != Point::NO_PRESSURE) {
+        // ۱. حذف نویز شناور (اگر فشار زیر ۲ درصد بود، نقطه را کلاً نادیده بگیر)
+        if (point.z < 0.02) {
+            return;
+        }
+
+        // ۲. محدود کردن پرش‌های ناگهانی (فشارهای بالای ۸۵ درصد روی ۸۵ قفل می‌شوند)
+        if (point.z > 0.85) {
+            point.z = 0.85;
+        }
+    }
+    // --- END: Hardcoded Filter ---
+
+    // کد اصلی برنامه از اینجا شروع می‌شود
     if (this->hasPressure && point.z > 0.0) {
         point.z *= this->stroke->getWidth();
     }
@@ -80,24 +96,17 @@ void StrokeHandler::paintTo(Point point) {
     if (pointCount > 0) {
         Point endPoint = stroke->getPoint(pointCount - 1);
         double distance = point.lineLengthTo(endPoint);
-        if (distance < PIXEL_MOTION_THRESHOLD) {  //(!validMotion(point, endPoint)) {
+        if (distance < PIXEL_MOTION_THRESHOLD) {
             if (pointCount == 1 && this->hasPressure && endPoint.z < point.z) {
-                // Record the possible increase in pressure for the first point
                 this->stroke->setLastPressure(point.z);
                 this->viewPool->dispatch(xoj::view::StrokeToolView::THICKEN_FIRST_POINT_REQUEST, point.z);
             }
             return;
         }
         if (this->hasPressure) {
-            /**
-             * Both device and tool are pressure sensitive
-             */
             if (const double widthDelta = point.z - endPoint.z;
                 - widthDelta > MAX_WIDTH_VARIATION || widthDelta > MAX_WIDTH_VARIATION) {
-                /**
-                 * If the width variation is to big, decompose into shorter segments.
-                 * Those segments can not be shorter than PIXEL_MOTION_THRESHOLD
-                 */
+                
                 double nbSteps = std::min(std::ceil(std::abs(widthDelta) / MAX_WIDTH_VARIATION),
                                           std::floor(distance / PIXEL_MOTION_THRESHOLD));
                 double stepLength = 1.0 / nbSteps;
@@ -105,7 +114,7 @@ void StrokeHandler::paintTo(Point point) {
                                 widthDelta * stepLength);
                 endPoint.z += increment.z;
 
-                for (int i = 1; i < static_cast<int>(nbSteps); i++) {  // The last step is done below
+                for (int i = 1; i < static_cast<int>(nbSteps); i++) {
                     endPoint.x += increment.x;
                     endPoint.y += increment.y;
                     endPoint.z += increment.z;
